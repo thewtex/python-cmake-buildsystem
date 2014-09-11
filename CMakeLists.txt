@@ -81,20 +81,32 @@ set(_extracted_dir "Python-2.7.3")
 if(WIN32)
     set(_download_link "https://github.com/jonashaag/cpython/archive/v2.7.3.zip")
     set(_extracted_dir "cpython-2.7.3")
-endif(WIN32)
+endif()
 if(NOT EXISTS ${SRC_DIR}/${_landmark})
-    message(FATAL_ERROR "Failed to locate python source.
-The searched locations were:
-   <CMAKE_CURRENT_BINARY_DIR>
-   <CMAKE_CURRENT_BINARY_DIR>/../cpython-${PY_VERSION_MAJOR}.${PY_VERSION_MINOR}.${PY_VERSION_PATCH}
-   <CMAKE_CURRENT_BINARY_DIR>/../Python-${PY_VERSION_MAJOR}.${PY_VERSION_MINOR}.${PY_VERSION_PATCH}
-   <SRC_DIR>
-You could try to:
-  1) download ${_download_link}
-  2) extract the archive in folder: ${_parent_dir}
-  3) Check that file \"${_parent_dir}/${_extracted_dir}/${_landmark}\" exists.
-  4) re-configure.
-If you already downloaded the source, you could try to re-configure this project passing -DSRC_DIR:PATH=/path/to/Python-2.7.3 using cmake or adding an PATH entry named SRC_DIR from cmake-gui.")
+    message(STATUS "CPython sources not found. Attempting to download.")
+    get_filename_component(_filename ${_download_link} NAME)
+    set(_download_path "../${_filename}")
+    file(DOWNLOAD ${_download_link} "../${_filename}" SHOW_PROGRESS)
+    if(EXISTS "${_download_path}")
+        execute_process(COMMAND ${CMAKE_COMMAND} -E echo "unpacking..."
+          COMMAND ${CMAKE_COMMAND} -E tar xf "${_filename}"
+          WORKING_DIRECTORY ..)
+        file(REMOVE "${_download_path}")
+    endif()
+    if(NOT EXISTS ${SRC_DIR}/${_landmark})
+        message(FATAL_ERROR "Failed to locate python source.
+    The searched locations were:
+       <CMAKE_CURRENT_BINARY_DIR>
+       <CMAKE_CURRENT_BINARY_DIR>/../cpython-${PY_VERSION_MAJOR}.${PY_VERSION_MINOR}.${PY_VERSION_PATCH}
+       <CMAKE_CURRENT_BINARY_DIR>/../Python-${PY_VERSION_MAJOR}.${PY_VERSION_MINOR}.${PY_VERSION_PATCH}
+       <SRC_DIR>
+    You could try to:
+      1) download ${_download_link}
+      2) extract the archive in folder: ${_parent_dir}
+      3) Check that file \"${_parent_dir}/${_extracted_dir}/${_landmark}\" exists.
+      4) re-configure.
+    If you already downloaded the source, you could try to re-configure this project passing -DSRC_DIR:PATH=/path/to/Python-2.7.3 using cmake or adding an PATH entry named SRC_DIR from cmake-gui.")
+    endif()
 endif()
 message(STATUS "SRC_DIR: ${SRC_DIR}")
 
